@@ -1,7 +1,9 @@
 ---
 title: 'Bios 6301: Assignment 1'
-author: Lydia Yao
-output: html_document
+author: "Lydia Yao"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 *Due Thursday, 09 September, 1:00 PM*
