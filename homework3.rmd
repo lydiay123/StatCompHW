@@ -1,0 +1,246 @@
+---
+title: 'Bios 6301: Assignment 3'
+author: "Lydia Yao"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+*Due Tuesday, 28 September, 1:00 PM*
+
+50 points total.
+
+Add your name as `author` to the file's metadata section.
+
+Submit a single knitr file (named `homework3.rmd`) by email to michael.l.williams@vanderbilt.edu.
+Place your R code in between the appropriate chunks for each question.
+Check your output by using the `Knit HTML` button in RStudio.
+
+$5^{n=day}$ points taken off for each day late.
+
+### Question 1 ###
+
+**15 points**
+
+Write a simulation to calculate the power for the following study
+design.  The study has two variables, treatment group and outcome.
+There are two treatment groups (0, 1) and they should be assigned
+randomly with equal probability.  The outcome should be a random normal
+variable with a mean of 60 and standard deviation of 20.  If a patient
+is in the treatment group, add 5 to the outcome.  5 is the true
+treatment effect.  Create a linear model for the outcome by the
+treatment group, and extract the p-value (hint: see assigment1).
+Test if the p-value is less than or equal to the alpha level, which
+should be set to 0.05.
+
+Repeat this procedure 1000 times. The power is calculated by finding
+the percentage of times the p-value is less than or equal to the alpha
+level.  Use the `set.seed` command so that the professor can reproduce
+your results.
+
+1. Find the power when the sample size is 100 patients. (10 points)
+```{r}
+# Set the seed for predictability
+set.seed(194842)
+# Define alpha
+alpha = 0.05
+# Count the number of times the p-value is less than or equal to alpha
+count = 0
+# Define number of simulations
+nsim = 1000
+# Loop nsim times
+for (k in 1:nsim){
+    # Randomly select treatment and outcome
+    treatment <- sample(c(0,1), replace=TRUE, size=100)
+    outcome <- rnorm(100, 60, 20)
+    d.frame = data.frame(treatment,outcome)
+    colnames(d.frame) = c("treatment","outcome")
+    # Add 5 to treatment group
+    for (i in 1:nrow(d.frame)){
+        if (d.frame[i,'treatment'] == 1) {
+            d.frame[i, 'outcome'] = d.frame[i, 'outcome'] + 5
+        }
+    }
+    # Create model and calculate p-value
+    mod <- lm(outcome ~ treatment, dat=d.frame)
+    mod.test <- t.test(outcome ~ treatment, dat=d.frame, var.equal=TRUE)
+    # See if our p-value is less than or equal to alpha
+    if (mod.test$p.value <= alpha){
+        count = count + 1
+    }
+}
+# Calculate Power
+power = count / 1000
+power
+```
+
+1. Find the power when the sample size is 1000 patients. (5 points)
+```{r}
+# Define alpha
+alpha = 0.05
+# Count the number of times the p-value is less than or equal to alpha
+count = 0
+# Define number of simulations
+nsim = 1000
+# Loop nsim times
+for (k in 1:nsim){
+    # Randomly select treatment and outcome
+    treatment <- sample(c(0,1), replace=TRUE, size=1000)
+    outcome <- rnorm(1000, 60, 20)
+    d.frame = data.frame(treatment,outcome)
+    colnames(d.frame) = c("treatment","outcome")
+    # Add 5 to treatment group
+    for (i in 1:nrow(d.frame)){
+        if (d.frame[i,'treatment'] == 1) {
+            d.frame[i, 'outcome'] = d.frame[i, 'outcome'] + 5
+        }
+    }
+    # Create model and calculate p-value
+    mod <- lm(outcome ~ treatment, dat=d.frame)
+    mod.test <- t.test(outcome ~ treatment, dat=d.frame, var.equal=TRUE)
+    # See if our p-value is less than or equal to alpha
+    if (mod.test$p.value <= alpha){
+        count = count + 1
+    }
+}
+# Calculate Power
+power = count / 1000
+power
+```
+### Question 2 ###
+
+**14 points**
+
+Obtain a copy of the [football-values lecture](https://github.com/couthcommander/football-values).
+Save the `2021/proj_wr21.csv` file in your working directory.  Read
+in the data set and remove the first two columns.
+```{r}
+# Read data in
+football <- read.csv("https://github.com/couthcommander/football-values/raw/main/2021/proj_wr21.csv", header=TRUE)
+football <- subset(football, select = -c(1, 2))
+```
+1. Show the correlation matrix of this data set. (4 points)
+```{r}
+library(corrplot)
+# Get correlation plot from data and plot it
+football.cor = cor(football, method = c("pearson"))
+corrplot(football.cor)
+football.cor
+```
+1. Generate a data set with 30 rows that has a similar correlation
+structure.  Repeat the procedure 1,000 times and return the mean
+correlation matrix. (10 points)
+```{r}
+library(MASS)
+# Define initial resulting matrix of zeros
+result <- matrix(0, 8, 8)
+# Define our correlation structure that we want to imitate
+sigma <- football.cor
+mu <- colMeans(football)
+# Loop through our simulations
+for (i in 1:1000) {
+    # Create 30 rows of sample
+    sample <- mvrnorm(n=30, mu = mu, Sigma = sigma)
+    # Get correlation and append to our result
+    sample.cor = cor(sample, method = c("pearson"))
+    result <- result + sample.cor
+}
+# Find mean of result and return
+result = result/1000
+corrplot(result)
+result
+```
+### Question 3 ###
+
+**21 points**
+
+Here's some code:
+
+```{r}
+nDist <- function(n = 100) {
+    df <- 10
+    prob <- 1/3
+    shape <- 1
+    size <- 16
+    list(
+        beta = rbeta(n, shape1 = 5, shape2 = 45),
+        binomial = rbinom(n, size, prob),
+        chisquared = rchisq(n, df),
+        exponential = rexp(n),
+        f = rf(n, df1 = 11, df2 = 17),
+        gamma = rgamma(n, shape),
+        geometric = rgeom(n, prob),
+        hypergeometric = rhyper(n, m = 50, n = 100, k = 8),
+        lognormal = rlnorm(n),
+        negbinomial = rnbinom(n, size, prob),
+        normal = rnorm(n),
+        poisson = rpois(n, lambda = 25),
+        t = rt(n, df),
+        uniform = runif(n),
+        weibull = rweibull(n, shape)
+    )
+}
+```
+
+1. What does this do? (3 points)
+
+    ```{r}
+    round(sapply(nDist(500), mean), 2)
+    ```
+    
+    ```
+    Here we are first calling the nDist(500) function to get a matrix of 500 results each of different distributions.  Using the sapply, we are finding the mean of each distribution and rounding it to 2 decimal places.
+    ```
+
+1. What about this? (3 points)
+
+    ```{r}
+    sort(apply(replicate(20, round(sapply(nDist(10000), mean), 2)), 1, sd))
+    ```
+    
+    ```
+    We are now sampling 10000 per distribution when we call the nDist function.  Similar to the previous problem we are finding the mean and rounding it to 2 decimal places.  This time, we are replicating the calculation of the list of means 20 times.  Across the 20 replications we are finding the standard deviation of each distribution.  To do this, we are using apply() on 'margin = 1'.  Last, we sort the resulting standard deviations from smallest to biggest.
+    ```
+
+    In the output above, a small value would indicate that `N=10,000` would provide a sufficent sample size as to estimate the mean of the distribution. Let's say that a value *less than 0.02* is "close enough".
+
+1. For each distribution, estimate the sample size required to simulate the distribution's mean. (15 points)
+```{r eval = FALSE}
+n <- 0
+hold <- rep(NA,15)
+s <- 1
+
+while(TRUE){
+    n = n + 10
+    s <- apply(replicate(20,sapply(nDist(n), mean)), 1, sd)
+    s2 <- which(s < 0.02)
+    
+    for (i in s2) {
+        if (is.na(hold[i])){
+            hold[i] = n
+        }
+    }
+    if (sum(is.na(hold)) == 0){
+        break
+    }
+}
+```
+Don't worry about being exact. It should already be clear that N < 10,000 for many of the distributions. You don't have to show your work. Put your answer to the right of the vertical bars (`|`) below.
+
+distribution|N
+---|---
+beta|10
+binomial|2880
+chisquared|19490
+exponential|1080
+f|540
+gamma|1140
+geometric|6060
+hypergeometric|2250
+lognormal|4580
+negbinomial|206000
+normal|1630
+poisson|55010
+t|1030
+uniform|190
+weibull|1130
