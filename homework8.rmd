@@ -44,7 +44,7 @@ methods(class = 'tbl_df')
 
 3. If you call `print(dat)`, what print method is being dispatched? (1 point)
   ```
-  The print method will dispatch the print under tbl.
+  The print method will dispatch the print under tbl_df.
   ```
 
 4. Set the class of `dat` to be a data.frame. (1 point)
