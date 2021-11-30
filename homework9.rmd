@@ -49,8 +49,6 @@ result[1:100,2] = pop$f
 result[1:100,3] = rep(1, 100)
 for(i in 1:8){
   pop = next_gen(pop)
-  print(i*100+1)
-  print(((i+1)*100))
   result[(i*100+1):((i+1)*100),1] = pop$m
   result[(i*100+1):((i+1)*100),2] = pop$f
   result[(i*100+1):((i+1)*100),3] = rep(i+1, 100)
